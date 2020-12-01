@@ -236,16 +236,21 @@ void func_80052E5C(s32 arg0) {
     func_80050B90(D_8009A628, 6, 1, temp4);
     func_80052614(temp4);
     al_LoadBKHeaders(temp4, alHeap);
+
     if (al_CopyFileTableEntry(temp4->unk_3C->unk_0, 0x20, &subroutine_arg7) == 0) {
         al_DmaCopy(subroutine_arg7[0], temp4->unk_A0, subroutine_arg7[1] & 0xFFFFFF);
     }
+
     func_8004B62C((*temp2_1));
+
     if (al_CopyFileTableEntry(temp4->unk_3C->unk_2, 0x40, subroutine_arg7) == 0) {
         al_LoadPER(temp4, subroutine_arg7[0]);
     }
+
     if (al_CopyFileTableEntry(temp4->unk_3C->unk_4, 0x40, &subroutine_arg7) == 0) {
         al_LoadPRG(temp4, subroutine_arg7[0]);
     }
+
 
     temp4->unk_12EC = &temp4->unk_4EC;
     temp4->unk_12F0 = &temp4->unk_5EC;
