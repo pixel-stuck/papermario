@@ -246,11 +246,10 @@ void func_80052E5C(s32 arg0) {
     if (al_CopyFileTableEntry(temp4->unk_3C->unk_2, 0x40, subroutine_arg7) == 0) {
         al_LoadPER(temp4, subroutine_arg7[0]);
     }
-
+    
     if (al_CopyFileTableEntry(temp4->unk_3C->unk_4, 0x40, &subroutine_arg7) == 0) {
         al_LoadPRG(temp4, subroutine_arg7[0]);
     }
-
 
     temp4->unk_12EC = &temp4->unk_4EC;
     temp4->unk_12F0 = &temp4->unk_5EC;
