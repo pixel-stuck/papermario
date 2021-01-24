@@ -19,7 +19,56 @@ INCLUDE_ASM(s32, "code_b72b0_len_15ed0", func_80120DE4);
 
 INCLUDE_ASM(s32, "code_b72b0_len_15ed0", func_80120F04);
 
+#ifdef NON_MATCHING
+s32 func_80120FB8(VirtualModel* virtualModel) {
+    u32 temp;
+    s32* temp2;
+    u32* modelData = virtualModel->virtualModelData;
+
+    switch(*modelData++) {
+        case 0:
+            func_80122E94(virtualModel);
+            return 1;
+        case 1:
+            virtualModel->unk_08 = *modelData++;
+            virtualModel->unk_14 = (s32*)(*modelData++);
+            virtualModel->virtualModelData = modelData;
+            break;
+        case 2:
+            virtualModel->virtualModelData = virtualModel->loopPoint;
+            return 1;
+        case 3:
+            virtualModel->loopPoint = modelData;
+            virtualModel->virtualModelData = modelData;
+            return 1;
+        case 4:
+            virtualModel->unk_04 = ((u8*)modelData)[3];
+            virtualModel->virtualModelData = ++modelData;
+            return 1;
+        case 5:
+            virtualModel->flags |= *modelData++;
+            virtualModel->virtualModelData = modelData;
+            return 1;
+        case 6:
+            virtualModel->flags &= ~(*modelData++);
+            virtualModel->virtualModelData = modelData;
+            return 1;
+        case 7:
+            temp2 = virtualModel->unk_14;
+            virtualModel->unk_08 = *modelData++;
+            temp2[0] = *modelData++;
+            temp2[1] = *modelData++;
+            temp2[2] = *modelData++;
+            temp2[3] = *modelData++;
+            virtualModel->virtualModelData = modelData;
+            break;
+    }
+
+    return 0;
+}
+#else
 INCLUDE_ASM(s32, "code_b72b0_len_15ed0", func_80120FB8);
+#endif
 
 void func_80121140(Matrix4f* arg0) {
     guMtxIdentF(arg0->mtx);
@@ -49,7 +98,41 @@ s32 func_80122DDC(s32 arg0) {
 
 INCLUDE_ASM(s32, "code_b72b0_len_15ed0", func_80122DFC);
 
-INCLUDE_ASM(s32, "code_b72b0_len_15ed0", func_80122E94);
+INCLUDE_ASM(void, "code_b72b0_len_15ed0", func_80122E94, VirtualModel* virtualModel);
+/*s32 func_80122E94(s32 arg0) {
+    s32 temp_a0;
+    s32 temp_v0;
+    s32 temp_v0_2;
+    void *phi_v1;
+    s32 phi_a0;
+    s32 phi_v0;
+    s32 phi_a0_2;
+    s32 phi_return;
+
+    phi_v1 = D_80154370;
+    phi_a0 = 0;
+loop_1:
+    temp_v0 = phi_a0 < 0x100;
+    phi_v0 = temp_v0;
+    phi_a0_2 = phi_a0;
+    phi_return = temp_v0;
+    if (*phi_v1 != arg0) {
+        temp_a0 = phi_a0 + 1;
+        phi_v1 = phi_v1 + 4;
+        phi_a0 = temp_a0;
+        if (temp_a0 < 0x100) {
+            goto loop_1;
+        }
+        temp_v0_2 = temp_a0 < 0x100;
+        phi_v0 = temp_v0_2;
+        phi_a0_2 = temp_a0;
+        phi_return = temp_v0_2;
+    }
+    if (phi_v0 != 0) {
+        phi_return = func_80122DFC(phi_a0_2, arg0);
+    }
+    return phi_return;
+}*/
 
 INCLUDE_ASM(s32, "code_b72b0_len_15ed0", func_80122EE8);
 

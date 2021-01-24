@@ -4,20 +4,17 @@
 void gfxRetrace_Callback(void);
 void gfxPreNMI_Callback(void);
 
-#ifdef NON_MATCHING
-// Control flow issue w/ PANIC
 void boot_main(void) {
-    OSViMode* viMode;
+
     if (osTvType == OS_TV_NTSC) {
-        viMode = &osViModeTable[56];
+        osViSetMode(&osViModeTable[56]);
+        osViSetSpecialFeatures(OS_VI_GAMMA_OFF | OS_VI_GAMMA_DITHER_OFF | OS_VI_DIVOT_ON | OS_VI_DITHER_FILTER_ON);
     } else if (osTvType == OS_TV_MPAL) {
-        viMode = &osViModeTable[57];
+        osViSetMode(&osViModeTable[57]);
+        osViSetSpecialFeatures(OS_VI_GAMMA_OFF | OS_VI_GAMMA_DITHER_OFF | OS_VI_DIVOT_ON | OS_VI_DITHER_FILTER_ON);
     } else {
         PANIC();
     }
-    osViSetMode(viMode);
-
-    osViSetSpecialFeatures(OS_VI_GAMMA_OFF | OS_VI_GAMMA_DITHER_OFF | OS_VI_DIVOT_ON | OS_VI_DITHER_FILTER_ON);
     nuGfxDisplayOff();
     crash_create_monitor();
     func_80025C60();
@@ -37,9 +34,6 @@ void boot_main(void) {
 
     while (TRUE) {}
 }
-#else
-INCLUDE_ASM(void, "code_1370_len_7d0", boot_main, void);
-#endif
 
 INCLUDE_ASM(void, "code_1370_len_7d0", gfxRetrace_Callback, void);
 

@@ -33,7 +33,8 @@ f32 get_clamped_angle_diff(f32, f32);
 
 u32 get_entity_type(s32 arg0);
 Entity* get_entity_by_index(s32 index);
-s32 create_entity(StaticEntityData*, s32, s32, s32, s32, s32);
+void create_entity_shadow(Entity* entity, f32 x, f32 y, f32 z);
+s32 create_entity(StaticEntityData* arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, ...);
 void func_80070550(s32, f32, f32, f32, f32, f32, s32, s32);
 void func_802E263C(Entity* entity);
 
@@ -70,7 +71,7 @@ UNK_TYPE func_80072230(s32, f32, f32, f32, f32, s32);
 
 // Text
 PrintContext* load_string(s32 stringID, s32* a1);
-void get_screen_coords(Cam camID, f32 x, f32 y, f32 z, f32* outX, f32* outY, f32* outZ);
+void get_screen_coords(s32 cameraID, f32 x, f32 y, f32 z, s32* outX, s32* outY, s32* outZ);
 
 void parent_collider_to_model(s32 colliderID, s16 modelIndex);
 void clone_model(u16 srcModelID, u16 newModelID);
@@ -98,6 +99,7 @@ Trigger* get_trigger_by_id(s32 triggerID);
 Actor* get_actor(ActorID actorID);
 ActorPart* get_actor_part(Actor* actor, s32 partIndex);
 
+
 s32 func_800494C0(Npc* npc, s32 arg1, s32 arg2);
 
 s32 get_variable(ScriptInstance* script, Bytecode var);
@@ -109,6 +111,7 @@ f32 sin_deg(f32 x);
 f32 cos_deg(f32 x);
 f32 sin_rad(f32 x);
 f32 cos_rad(f32 x);
+void sin_cos_deg(f32 x, f32* sin, f32* cos);
 s16 round(f32);
 f32 atan2(f32 startX, f32 startZ, f32 endX, f32 endZ);
 f32 clamp_angle(f32 theta);

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "stdlib/stdarg.h"
 
 INCLUDE_ASM(s32, "code_a5dd0_len_114e0", update_entities);
 
@@ -6,7 +7,86 @@ INCLUDE_ASM(s32, "code_a5dd0_len_114e0", update_shadows);
 
 INCLUDE_ASM(s32, "code_a5dd0_len_114e0", func_8010FBC0);
 
+#ifdef NON_MATCHING
+// single instruction swap.
+// reloads from *curPos in case 1 rather than just reusing the register
+u8 func_8010FBD8(Entity* entity) {
+    u8 phi_a0 = 0;
+    u32* curPos = entity->unk_18;
+
+    switch (*curPos++) {
+        case 0:
+            entity->unk_09 = 0xFFu;
+            entity->unk_1C = NULL;
+            entity->unk_18 = NULL;
+            phi_a0 = 0;
+            break;
+        case 1:
+            entity->unk_18 = *curPos;
+            entity->unk_2C[0] = *curPos++;
+            entity->unk_09 = 1;
+            phi_a0 = 1;
+            break;
+        case 2: 
+        {
+            void (*temp)(Entity* entity) = *curPos++;
+            entity->unk_18 = curPos;
+            temp(entity);
+            phi_a0 = 1;
+            break;
+        }
+        case 3:
+            entity->unk_09 = ((u8*)curPos++)[3];
+            entity->unk_1C = (s32) *curPos++;
+            entity->unk_18 = curPos;
+            phi_a0 = 0;
+            break;
+        case 4:
+            entity->unk_18 = entity->unk_2C[*curPos++];
+            phi_a0 = 1;
+            break;
+        case 5: 
+        {
+            s32 index = *curPos++;
+            entity->unk_2C[index] = curPos;
+            entity->unk_18 = curPos;
+            phi_a0 = 1;
+            break;
+        }
+        case 6:
+            if (entity->boundScript != NULL) {
+                entity->flags |= 0x1000000;
+            }
+            entity->unk_18 = curPos++;
+            phi_a0 = 1;
+            break;
+        case 7:
+            entity->flags |= *curPos++;
+            entity->unk_18 = curPos;
+            phi_a0 = 1;
+            break;
+        case 8:
+        {
+            entity->flags &= ~(*curPos++);
+            entity->unk_18 = curPos;
+            phi_a0 = 1;
+            break;
+        }
+        case 9:
+            play_sound(*curPos++);
+            entity->unk_18 = curPos;
+            phi_a0 = 1;
+            break;
+        default:
+            entity->unk_18 = ++curPos;
+            phi_a0 = 1;
+            break;
+    }
+    return phi_a0;
+}
+#else
 INCLUDE_ASM(s32, "code_a5dd0_len_114e0", func_8010FBD8);
+#endif
 
 INCLUDE_ASM(void, "code_a5dd0_len_114e0", func_8010FD68, Entity* entity);
 
@@ -91,7 +171,34 @@ INCLUDE_ASM(s32, "code_a5dd0_len_114e0", func_80110BCC);
 
 INCLUDE_ASM(s32, "code_a5dd0_len_114e0", func_80110BF8);
 
-INCLUDE_ASM(s32, "code_a5dd0_len_114e0", load_area_specific_entity_data);
+extern s32 D_8015132C;
+extern UNK_TYPE D_00E2B530;
+extern UNK_TYPE D_00E2D730;
+extern UNK_TYPE D_00E2F750;
+extern UNK_TYPE D_00E31530;
+
+void load_area_specific_entity_data(void) {
+    s16 areaID;
+    s32 temp_v0;
+    s32 phi_a0;
+    s32 phi_a1;
+
+    if (!D_8015132C) {
+        areaID = GAME_STATUS->areaID;
+        if ((areaID == 0x11) || (areaID == 8)) {
+            phi_a0 = &D_00E2D730;
+            phi_a1 = &D_00E2F750;
+        } else if ((areaID == 0xA) || (areaID == 0x10)) {
+            phi_a0 = &D_00E2F750;
+            phi_a1 = &D_00E31530;
+        } else {
+            phi_a0 = &D_00E2B530;
+            phi_a1 = &D_00E2D730;
+        }
+        dma_copy(phi_a0, phi_a1, (void *)0x802BAE00);
+        D_8015132C = TRUE;
+    }
+}
 
 INCLUDE_ASM(s32, "code_a5dd0_len_114e0", clear_entity_data);
 
@@ -111,8 +218,160 @@ INCLUDE_ASM(s32, "code_a5dd0_len_114e0", func_80111790);
 
 INCLUDE_ASM(s32, "code_a5dd0_len_114e0", func_801117DC);
 
-INCLUDE_ASM(s32, "code_a5dd0_len_114e0", create_entity, StaticEntityData* data, s32 x, s32 y, s32 z, s32 arg4,
-            s32 flags);
+// returns index into gCurrentEntityListPtr the new entity was loaded into, if an entity was loaded.
+// Otherwise, -1 is returned.
+#ifdef NON_MATCHING
+s32 create_entity(StaticEntityData* arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, ...) {
+    f32 temp_f22;
+    f32 temp_f24;
+    f32 temp_f26;
+    Entity* temp_s0;
+    s32 temp_v0_4;
+    s32 phi_return;
+    s32 i;
+    EntityList** entityList;
+    Entity* currentEntity;
+    va_list ap;
+    s32* temp2;
+    s32 temp;
+    u16 temp3;
+    f32 a1;
+    f32 a2;
+    f32 a3;
+    UNK_PTR tempPtr;
+    u8 temp4;
+
+    a1 = arg1;
+    a2 = arg2;
+    a3 = arg3;
+
+    va_start(ap, arg4);
+
+
+    load_area_specific_entity_data();
+
+    temp2 = &D_8015C7D0[2];
+
+    temp_f22 = (f32)arg1;
+    temp_f24 = (f32)arg2;
+    temp_f26 = (f32)arg3;
+
+
+
+    *temp2-- = 0;
+    *temp2-- = 0;
+    *temp2 = 0;
+
+    for (i = 3; i > 0; i--) {
+        temp = va_arg(ap, s32);
+        if (temp == 0x80000000) {
+            break;
+        }
+        *temp2++ = temp;
+    }
+
+    va_end(ap);
+
+    entityList = &gCurrentEntityListPtr;
+    for (i = 0; i < 0x1E; i++) {
+        currentEntity = (**entityList)[i];
+        if (currentEntity == NULL) {
+            break;
+        }
+    }
+
+    if (i >= 0x1E) {
+        return -1;
+    }
+
+
+    temp_s0 = heap_malloc(sizeof(Entity));
+    (**entityList)[i] = temp_s0;
+    mem_clear(temp_s0, sizeof(Entity));
+    temp_s0->dataBuf = NULL;
+
+    if (arg0->argSize != 0u) {
+        temp_s0->dataBuf = heap_malloc(arg0->argSize);
+        mem_clear(temp_s0->dataBuf, arg0->argSize);
+    }
+
+    temp_s0->unk_0A = arg0->entityType;
+    temp_s0->listIndex = i;
+    temp_s0->unk_24 = 0;
+    temp_s0->buildMatrixOverride = NULL;
+    temp_s0->static_data = arg0;
+    tempPtr = arg0->unk_data_ptr1;
+    temp_s0->unk_09 = (tempPtr != NULL);
+    temp_s0->unk_18 = tempPtr;
+    temp_s0->unk_2C = arg0->unk_data_ptr1;
+    temp_s0->unk_1C = 0;
+    temp_s0->unk_06 = 0;
+    temp_s0->unk_07 = 0;
+    temp_s0->unk_3C = NULL;
+
+    // Set the new Entity's position
+    temp_s0->position.x = temp_f22;
+    temp_s0->position.y = temp_f24;
+    temp_s0->position.z = temp_f26;
+
+    // Set the new Entity's rotation
+    temp_s0->rotation.x = 0.0f;
+    temp_s0->rotation.y = arg4;
+    temp_s0->rotation.z = 0.0f;
+
+    // Set the new Entity's scale
+    temp_s0->scale.x = 1.0f;
+    temp_s0->scale.y = 1.0f;
+    temp_s0->scale.z = 1.0f;
+
+    temp_s0->flags = arg0->flags | 0x80000000;
+    temp_s0->aabb[0] = arg0->unk_21[0];
+    temp_s0->aabb[1] = arg0->unk_21[1];
+    temp3 = arg0->unk_21[2];
+    temp_s0->unk_05 = 1;
+    temp_s0->unk_08 = 0xFF;
+    temp_s0->alpha = 0xFF;
+    temp_s0->virtualModelIndex = -1;
+    temp_s0->shadowIndex = -1;
+    temp_s0->vertexData = NULL;
+    temp_s0->aabb[2] = temp3;
+    if (!(arg0->flags & 8)) {
+        if (arg0->dmaStart != 0) {
+            load_simple_entity_data(temp_s0, arg0, i);
+        }
+        if (arg0->unk_04 != NULL) {
+            temp_s0->virtualModelIndex = load_virtual_model(arg0->unk_04);
+            func_80120F04(temp_s0->virtualModelIndex);
+        }
+    } else {
+        load_split_entity_data(temp_s0, arg0, i);
+    }
+    if ((arg0->entityType != 1u) && (temp_s0->flags & 0x300)) {
+        create_entity_shadow(temp_s0, temp_f22, temp_f24, temp_f26);
+    }
+
+    switch (arg0->entityType) {
+        case 7:
+        case 8:
+        case 46:
+        case 47:
+        case 49:
+            temp_s0->flags |= 0x4000;
+        default:
+            break;
+    }
+
+    if (arg0->unk_data_func != NULL) {
+        arg0->unk_data_func(temp_s0);
+    }
+    update_entity_transform_matrix(temp_s0);
+
+    return temp_s0->listIndex;
+
+}
+#else
+INCLUDE_ASM(s32, "code_a5dd0_len_114e0", create_entity, StaticEntityData* data, s32 x, s32 y, s32 z, s32 rot, ...);
+#endif
 
 INCLUDE_ASM(s32, "code_a5dd0_len_114e0", create_shadow_from_data);
 
@@ -145,7 +404,7 @@ INCLUDE_ASM(s32, "code_a5dd0_len_114e0", AssignPanelFlag, ScriptInstance* script
 
 INCLUDE_ASM(s32, "code_a5dd0_len_114e0", AssignCrateFlag, ScriptInstance* script, s32 isInitialCall);
 
-INCLUDE_ASM(s32, "code_a5dd0_len_114e0", create_entity_shadow);
+INCLUDE_ASM(void, "code_a5dd0_len_114e0", create_entity_shadow, Entity* entity, f32 x, f32 y, f32 z);
 
 INCLUDE_ASM(Shadow*, "code_a5dd0_len_114e0", create_shadow_type, s32 type, f32 x, f32 y, f32 z);
 

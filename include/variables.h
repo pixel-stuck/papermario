@@ -83,6 +83,8 @@ extern s32 D_8010EF08;
 extern s32 D_801595A0;
 extern BackgroundHeader gBackgroundImage;
 
+extern s32 D_802DAE50;
+extern s32 D_802DAE54;
 extern PrintContext* gCurrentPrintContext;
 extern s32 D_802DB264;
 extern PrintContext* D_802DB268;
@@ -107,6 +109,8 @@ extern UNK_TYPE D_0A002F78;
 extern UNK_TYPE D_0A001218;
 extern UNK_TYPE D_0A003F70;
 extern UNK_TYPE D_0A002318;
+
+extern s32 D_8015C7D0[3];
 
 // Animation related
 extern AnimatedMeshList* gCurrentAnimMeshListPtr;

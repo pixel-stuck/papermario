@@ -24,7 +24,12 @@ static const char D_80098A24[] = "%s_tex";
 
 INCLUDE_ASM(s32, "world/world", load_map_by_IDs);
 
-INCLUDE_ASM(s32, "world/world", get_current_map_config);
+extern Map* D_800A41E0;
+
+//TODO: this returns Map and should be renamed accordingly.
+Map* get_current_map_config(void) {
+    return D_800A41E0;
+}
 
 INCLUDE_ASM(MapConfig*, "world/world", get_current_map_header);
 

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "map.h"
 
 ApiStatus HidePlayerShadow(ScriptInstance* script, s32 isInitialCall) {
     Bytecode* args = script->ptrReadPos;
@@ -149,22 +150,198 @@ ApiStatus PlayerMoveTo(ScriptInstance* script, s32 isInitialCall) {
     return script->functionTemp[0].s < 0;
 }
 
-INCLUDE_ASM(s32, "code_F5750", func_802D1270);
+ApiStatus func_802D1270(ScriptInstance *script, s32 isInitialCall) {
+    Bytecode* curPos = script->ptrReadPos;
+    PlayerStatus* playerStatus = &gPlayerStatus; 
 
-INCLUDE_ASM(s32, "code_F5750", func_802D1380);
+    if (isInitialCall) {
+        f32 temp_f0;
+        s32 temp_a0;
+        f32 temp_f24 = get_variable(script, *curPos++);
+        f32 temp_f22 = get_variable(script, *curPos++);
+        f32 temp_f20 = get_float_variable(script, *curPos++);
 
-INCLUDE_ASM(s32, "code_F5750", player_jump);
-
-void PlayerJump(ScriptInstance* script, s32 isInitialCall) {
-    player_jump(script, isInitialCall, 0);
+        playerStatus->targetYaw = atan2(playerStatus->position.x, playerStatus->position.z, temp_f24, temp_f22);
+        temp_f0 = dist2D(playerStatus->position.x, playerStatus->position.z, temp_f24, temp_f22);
+        temp_a0 = (temp_f0 / temp_f20);
+        script->functionTemp[0].s = temp_a0;
+        move_player(temp_a0, playerStatus->targetYaw, temp_f0 / temp_a0);
+    }
+    script->functionTemp[0].s--;
+    return (script->functionTemp[0].s < 0) * ApiStatus_DONE2;
 }
 
-void PlayerJump1(ScriptInstance* script, s32 isInitialCall) {
-    player_jump(script, isInitialCall, 1);
+ApiStatus func_802D1380(ScriptInstance *script, s32 isInitialCall) {
+    Bytecode* curPos = script->ptrReadPos;
+    PlayerStatus* playerStatus = &gPlayerStatus;
+
+    if (isInitialCall) {
+        f32 temp_f22 = get_variable(script, *curPos++);
+        f32 temp_f20 = get_variable(script, *curPos++);
+        Npc** playerNpc = &gPlayerNpcPtr;
+        (*playerNpc)->duration = get_variable(script, *curPos++);
+        playerStatus->targetYaw = atan2(playerStatus->position.x, playerStatus->position.z, temp_f22, temp_f20);
+
+        if ((*playerNpc)->duration != 0) {
+            (*playerNpc)->moveSpeed = dist2D(playerStatus->position.x, playerStatus->position.z, temp_f22, temp_f20) / (f32) (*playerNpc)->duration;
+        } else {
+            (*playerNpc)->duration = dist2D(playerStatus->position.x, playerStatus->position.z, temp_f22, temp_f20) / (*playerNpc)->moveSpeed;
+            if ((*playerNpc)->duration == 0) {
+                (*playerNpc)->duration = 1;
+            }
+        }
+
+        move_player(gPlayerNpcPtr->duration, playerStatus->targetYaw, gPlayerNpcPtr->moveSpeed);
+    }
+    return ApiStatus_DONE1;
 }
 
-void PlayerJump2(ScriptInstance* script, s32 isInitialCall) {
-    player_jump(script, isInitialCall, 2);
+f32 func_800E3514(f32 arg0, s32 arg1);
+
+#ifdef NON_MATCHING
+ApiStatus player_jump(ScriptInstance *script, s32 isInitialCall, s32 arg2) {
+    Npc **playerNpc3;
+    Npc **playerNpc2;
+    f32 dist;
+    f32 temp_f0_4;
+    f32 temp_f0_5;
+    f32 temp_f0_6;
+    s32 temp_v0;
+    PlayerStatus* playerStatus = &gPlayerStatus;
+    Bytecode *curPos = script->ptrReadPos;
+    s32 phi_a0;
+    f32 temp_f22;
+    f32 temp_f24;
+    f32 temp_f20;
+    Npc** playerNpc;
+
+    if (isInitialCall != 0) {
+        script->functionTemp[0].s = 0;
+    }
+    if (script->functionTemp[0].s == 0) {
+        temp_f22 = get_variable(script, *curPos++);
+        temp_f24 = get_variable(script, *curPos++);
+        temp_f20 = get_variable(script, *curPos++);
+        temp_v0 = get_variable(script, *curPos++);
+        playerNpc = &gPlayerNpcPtr;
+        (*playerNpc)->pos.x = playerStatus->position.x;
+        (*playerNpc)->pos.y = playerStatus->position.y;
+        (*playerNpc)->pos.z = playerStatus->position.z;
+        (*playerNpc)->moveToPos.x = temp_f22;
+        (*playerNpc)->moveToPos.z = temp_f20;
+        (*playerNpc)->moveToPos.y = temp_f24;
+        (*playerNpc)->duration = temp_v0;
+        temp_f24 = playerStatus->targetYaw;
+        (*playerNpc)->yaw = temp_f24;
+        dist = dist2D((*playerNpc)->pos.x, (*playerNpc)->pos.y, (*playerNpc)->moveToPos.x, (*playerNpc)->moveToPos.z);
+        if (dist > 1.0) {
+            (*playerNpc)->yaw = atan2((*playerNpc)->pos.x, (*playerNpc)->pos.z, (*playerNpc)->moveToPos.x, (*playerNpc)->moveToPos.z);
+        }
+
+        temp_f0_4 = ((*playerNpc)->moveToPos.y - (*playerNpc)->pos.y);
+
+        if ((*playerNpc)->duration == 0) {
+            (*playerNpc)->duration = dist / (*playerNpc)->moveSpeed;
+        } else {
+            (*playerNpc)->moveSpeed = dist / (*playerNpc)->duration;
+        }
+
+        gPlayerNpcPtr->jumpVelocity = (gPlayerNpcPtr->jumpScale * (gPlayerNpcPtr->duration - 1) * 0.5f) + (temp_f0_4 / gPlayerNpcPtr->duration);
+        playerStatus->flags |= 8;
+        playerStatus->animFlags |= 0x10000000;
+
+        if (arg2 == 0) {
+            if ((playerStatus->animFlags & 0x4000) == 0) {
+                phi_a0 = 0x60009;
+                if ((playerStatus->animFlags & 1) == 0) {
+                    phi_a0 = 0x10007;
+                }
+            } else {
+                phi_a0 = 0x90005;
+            }
+            func_800DFEFC(phi_a0);
+            play_sound_at_player(0x2081, 0);
+        }
+        script->functionTemp[0].s = 1;
+    }
+
+    playerNpc2 = &gPlayerNpcPtr;
+
+    npc_move_heading((*playerNpc2), (*playerNpc2)->moveSpeed, (*playerNpc2)->yaw);
+
+    temp_f0_5 = (*playerNpc2)->jumpVelocity;
+    temp_f0_5 = temp_f0_5 - (*playerNpc2)->jumpScale;
+    temp_f0_6 = (*playerNpc2)->pos.y += (*playerNpc2)->jumpVelocity;
+    (*playerNpc2)->jumpVelocity = temp_f0_5;
+    if ((arg2 == 0) && (temp_f0_6 > 0.0f) && (temp_f0_6 <= 0.0f)) {
+        if (!(playerStatus->animFlags & 0x4000)) {
+            phi_a0 = 0x6000A;
+            if (!(playerStatus->animFlags & 1)) {
+                phi_a0 = 0x10008;
+            }
+        } else {
+            phi_a0 = 0x90005;
+        }
+        func_800DFEFC(phi_a0);
+    }
+
+    playerNpc3 = &gPlayerNpcPtr;
+
+    playerStatus->position.x = (*playerNpc3)->pos.x;
+    playerStatus->position.y = (*playerNpc3)->pos.y;
+    playerStatus->position.z = (*playerNpc3)->pos.z;
+
+    if (arg2 == 0) {
+        playerStatus->targetYaw = (*playerNpc3)->yaw;
+    }
+    (*playerNpc3)->duration--;
+
+    if ((*playerNpc3)->duration == 0) {
+        playerStatus->flags = playerStatus->flags & ~8;
+        playerStatus->animFlags &= ~0x10000000;
+
+        if (arg2 == 0) {
+            if ((playerStatus->animFlags & 0x4000) == 0) {
+                phi_a0 = 0x6000B;
+                if ((playerStatus->animFlags & 1) == 0) {
+                    phi_a0 = 0x10009;
+                }
+            } else {
+                phi_a0 = 0x10003;
+            }
+            func_800DFEFC(phi_a0);
+            func_8003D660(gPlayerNpcPtr, 2);
+        }
+
+        if((arg2 == 0) || (arg2 == 2)) {
+                s32 subroutine_arg4;
+                temp_f0_5 = func_800E3514(gPlayerNpcPtr->jumpVelocity, &subroutine_arg4);
+                if (subroutine_arg4 >= 0) {
+                    playerStatus->position.y = temp_f0_5;
+                    func_800E315C(subroutine_arg4);
+                    func_800EFD08();
+                }
+                return 1;
+        } else {
+            return 1;
+        }
+    }
+    return 0;
+}
+#else
+INCLUDE_ASM(s32, "code_F5750", player_jump, ScriptInstance* script, s32 isInitialCall, s32 arg2);
+#endif
+
+ApiStatus PlayerJump(ScriptInstance* script, s32 isInitialCall) {
+    return player_jump(script, isInitialCall, 0);
+}
+
+ApiStatus PlayerJump1(ScriptInstance* script, s32 isInitialCall) {
+    return player_jump(script, isInitialCall, 1);
+}
+
+ApiStatus PlayerJump2(ScriptInstance* script, s32 isInitialCall) {
+    return player_jump(script, isInitialCall, 2);
 }
 
 ApiStatus InterpPlayerYaw(ScriptInstance* script, s32 isInitialCall) {
@@ -291,11 +468,41 @@ ApiStatus DisablePartner(ScriptInstance* script, s32 isInitialCall) {
     return ApiStatus_DONE2;
 }
 
-INCLUDE_ASM(s32, "code_F5750", UseEntryHeading);
+ApiStatus UseEntryHeading(ScriptInstance *script, s32 isInitialCall) {
+    f32 temp_f20;
+    f32 temp_f22;
+    f32 temp_f2;
+    s32 temp_f8;
+    s32 temp_f8_2;
+    Bytecode *curPos = script->ptrReadPos;
+    MapConfig* config = get_current_map_header();
+    s32 temp_s3 = get_variable(script, *curPos++);
+    s32 temp_v0 = get_variable(script, *curPos++);
+    GameStatus *temp_a1 = *gGameStatusPtr;
+    PlayerStatus* playerStatus = &gPlayerStatus;
+    f32 subroutine_arg4;
+    f32 subroutine_arg5;
+
+    temp_f8 = GET_MAP_ENTRY(config, temp_a1->entryID)->x;
+    script->varTable[1] = temp_f8;
+    script->varTable[2] = GET_MAP_ENTRY(config, temp_a1->entryID)->y;
+    temp_f8_2 = GET_MAP_ENTRY(config, temp_a1->entryID)->z;
+    script->varTable[3] = temp_f8_2;
+    temp_f20 = temp_f8;
+    temp_f22 = temp_f8_2;
+    sin_cos_deg(clamp_angle(GET_MAP_ENTRY(config, temp_a1->entryID)->yaw + 180.0f), &subroutine_arg4, &subroutine_arg5);
+    temp_f2 = (*gGameStatusPtr)->exitAngle * 0.3f;
+    playerStatus->position.x = (temp_f20 + (temp_s3 * subroutine_arg4)) - (temp_f2 * subroutine_arg5);
+    playerStatus->position.z = (temp_f22 - (temp_s3 * subroutine_arg5)) - (temp_f2 * subroutine_arg4);
+    //TODO: vartable is an array of X32
+    ((X32*)script->varTable)[5].f = dist2D(playerStatus->position.x, playerStatus->position.z, temp_f20, temp_f22) / temp_v0;
+    playerStatus->flags |= 0x4000000;
+    return ApiStatus_DONE2;
+}
 
 INCLUDE_ASM(s32, "code_F5750", func_802D2148);
 
-INCLUDE_ASM(s32, "code_F5750", UseExitHeading);
+INCLUDE_ASM(s32, "code_F5750", UseExitHeading, ScriptInstance* script, s32 isInitialCall);
 
 INCLUDE_ASM(s32, "code_F5750", func_802D23F8);
 

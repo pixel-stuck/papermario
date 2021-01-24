@@ -6,10 +6,10 @@ INCLUDE_ASM(s32, "code_fa4c0_len_3bf0", func_802D5C70);
 
 ApiStatus FadeOutMusic(ScriptInstance* script, s32 isInitialCall) {
     Bytecode* args = script->ptrReadPos;
-    s32 itemID = get_variable(script, *args++);
+    s32 musicPlayer = get_variable(script, *args++);
     s32* ptrNextPos = args++;
 
-    return (set_music_track(itemID, -1, 0, get_variable(script, *ptrNextPos++), 8) != 0) * ApiStatus_DONE2;
+    return (set_music_track(musicPlayer, -1, 0, get_variable(script, *ptrNextPos++), 8) != 0) * ApiStatus_DONE2;
 }
 
 ApiStatus SetMusicTrack(ScriptInstance* script, s32 isInitialCall) {

@@ -290,20 +290,23 @@ typedef ScriptInstance* ScriptList[MAX_SCRIPTS];
 typedef struct Entity {
     /* 0x00 */ s32 flags;
     /* 0x04 */ u8 listIndex;
-    /* 0x05 */ char unk_05;
+    /* 0x05 */ u8 unk_05;
     /* 0x06 */ u8 unk_06;
-    /* 0x07 */ char unk_07[3];
-    /* 0x0A */ u8 unk_0A;
+    /* 0x07 */ u8 unk_07;
+    /* 0x08 */ u8 unk_08;
+    /* 0x09 */ u8 unk_09; // 1 if static_data->unk_data_ptr1 != NULL
+    /* 0x0A */ u8 unk_0A; // entity type; TODO: rename.
     /* 0x0B */ u8 alpha; /* reported by rain */
     /* 0x0C */ s16 aabb[3];
     /* 0x12 */ char unk_12[2];
     /* 0x14 */ s16 virtualModelIndex;
     /* 0x16 */ s16 shadowIndex;
-    /* 0x18 */ char unk_18[8];
+    /* 0x18 */ u32* unk_18;
+    /* 0x1C */ UNK_TYPE unk_1C;
     /* 0x20 */ UNK_PTR buildMatrixOverride;
-    /* 0x24 */ char unk_24[4];
+    /* 0x24 */ UNK_TYPE unk_24;
     /* 0x28 */ Bytecode* boundScript;
-    /* 0x2C */ char unk_2C[12];
+    /* 0x2C */ s32* unk_2C[3];
     /* 0x38 */ struct StaticEntityData* static_data;
     /* 0x3C */ UNK_PTR unk_3C; // pointer to draw func(?)
     /* 0x40 */ void* dataBuf;
@@ -325,17 +328,30 @@ typedef UNK_TYPE* DynamicEntityList[MAX_DYNAMIC_ENTITIES];
 
 typedef struct StaticEntityData {
     /* 0x00 */ s16 flags;
-    /* 0x02 */ s16 argSize;
+    /* 0x02 */ u16 argSize;
     /* 0x04 */ UNK_PTR unk_04;
     /* 0x08 */ char unk_08[4];
-    /* 0x0C */ UNK_FUN_PTR(unk_data_func);
+    /* 0x0C */ void (*unk_data_func)(Entity* entity);
     /* 0x10 */ UNK_PTR unk_data_ptr1;
     /* 0x14 */ UNK_PTR unk_data_ptr2;
     /* 0x18 */ s32 dmaStart;
     /* 0x1C */ s32 dmaEnd;
-    /* 0x20 */ s8 entityType;
-    /* 0x21 */ char unk_21[3];
+    /* 0x20 */ u8 entityType;
+    /* 0x21 */ u8 unk_21[3];
 } StaticEntityData; // size = 0x24
+
+typedef struct VirtualModel {
+    /* 0x00 */ s32 flags;
+    /* 0x04 */ s8 unk_04;
+    /* 0x05 */ char unk_05[3];
+    /* 0x08 */ f32 unk_08;
+    /* 0x0C */ char unk_0C[4];
+    /* 0x10 */ s32* virtualModelData;
+    /* 0x14 */ s32* unk_14;
+    /* 0x18 */ char unk_18[0x40];
+    /* 0x58 */ s32* loopPoint;
+    /* 0x5C */ char unk_5C[0xC];
+} VirtualModel; // size = 0x68
 
 typedef struct MusicPlayer {
     /* 0x00 */ u16 flags;
