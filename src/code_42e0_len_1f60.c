@@ -1,6 +1,5 @@
 #include "common.h"
 
-void sin_cos_rad(f32 rad, f32* outSinTheta, f32* outCosTheta);
 void func_80029860(s32 romStart, s32 vramDest, s32 length);
 
 #define ROM_CHUNK_SIZE 0x2000
@@ -198,7 +197,7 @@ INCLUDE_ASM(f32, "code_42e0_len_1f60", sin_rad, f32 angle);
 
 INCLUDE_ASM(f32, "code_42e0_len_1f60", cos_rad, f32 angle);
 
-INCLUDE_ASM(s32, "code_42e0_len_1f60", sin_cos_deg);
+INCLUDE_ASM(void, "code_42e0_len_1f60", sin_cos_deg, f32 deg, f32* outSinTheta, f32* outCosTheta);
 
 INCLUDE_ASM(f32, "code_42e0_len_1f60", sin_deg, f32 x);
 

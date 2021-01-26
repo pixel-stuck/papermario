@@ -199,9 +199,11 @@ ApiStatus func_802D1380(ScriptInstance *script, s32 isInitialCall) {
 f32 func_800E3514(f32 arg0, s32 arg1);
 
 #ifdef NON_MATCHING
+// regalloc + small reordering
 ApiStatus player_jump(ScriptInstance *script, s32 isInitialCall, s32 arg2) {
-    Npc **playerNpc3;
-    Npc **playerNpc2;
+    Npc** playerNpc;
+    Npc** playerNpc2;
+    Npc** playerNpc3;
     f32 dist;
     f32 temp_f0_4;
     f32 temp_f0_5;
@@ -213,11 +215,11 @@ ApiStatus player_jump(ScriptInstance *script, s32 isInitialCall, s32 arg2) {
     f32 temp_f22;
     f32 temp_f24;
     f32 temp_f20;
-    Npc** playerNpc;
 
-    if (isInitialCall != 0) {
+    if (isInitialCall) {
         script->functionTemp[0].s = 0;
     }
+
     if (script->functionTemp[0].s == 0) {
         temp_f22 = get_variable(script, *curPos++);
         temp_f24 = get_variable(script, *curPos++);
@@ -231,14 +233,14 @@ ApiStatus player_jump(ScriptInstance *script, s32 isInitialCall, s32 arg2) {
         (*playerNpc)->moveToPos.z = temp_f20;
         (*playerNpc)->moveToPos.y = temp_f24;
         (*playerNpc)->duration = temp_v0;
-        temp_f24 = playerStatus->targetYaw;
-        (*playerNpc)->yaw = temp_f24;
+        
+        (*playerNpc)->yaw = playerStatus->targetYaw;
         dist = dist2D((*playerNpc)->pos.x, (*playerNpc)->pos.y, (*playerNpc)->moveToPos.x, (*playerNpc)->moveToPos.z);
         if (dist > 1.0) {
             (*playerNpc)->yaw = atan2((*playerNpc)->pos.x, (*playerNpc)->pos.z, (*playerNpc)->moveToPos.x, (*playerNpc)->moveToPos.z);
         }
 
-        temp_f0_4 = ((*playerNpc)->moveToPos.y - (*playerNpc)->pos.y);
+        temp_f24 = ((*playerNpc)->moveToPos.y - (*playerNpc)->pos.y);
 
         if ((*playerNpc)->duration == 0) {
             (*playerNpc)->duration = dist / (*playerNpc)->moveSpeed;
@@ -246,7 +248,7 @@ ApiStatus player_jump(ScriptInstance *script, s32 isInitialCall, s32 arg2) {
             (*playerNpc)->moveSpeed = dist / (*playerNpc)->duration;
         }
 
-        gPlayerNpcPtr->jumpVelocity = (gPlayerNpcPtr->jumpScale * (gPlayerNpcPtr->duration - 1) * 0.5f) + (temp_f0_4 / gPlayerNpcPtr->duration);
+        gPlayerNpcPtr->jumpVelocity = (gPlayerNpcPtr->jumpScale * (gPlayerNpcPtr->duration - 1) * 0.5f) + (temp_f24 / gPlayerNpcPtr->duration);
         playerStatus->flags |= 8;
         playerStatus->animFlags |= 0x10000000;
 
@@ -315,9 +317,9 @@ ApiStatus player_jump(ScriptInstance *script, s32 isInitialCall, s32 arg2) {
 
         if((arg2 == 0) || (arg2 == 2)) {
                 s32 subroutine_arg4;
-                temp_f0_5 = func_800E3514(gPlayerNpcPtr->jumpVelocity, &subroutine_arg4);
+                temp_f24 = func_800E3514(gPlayerNpcPtr->jumpVelocity, &subroutine_arg4);
                 if (subroutine_arg4 >= 0) {
-                    playerStatus->position.y = temp_f0_5;
+                    playerStatus->position.y = temp_f24;
                     func_800E315C(subroutine_arg4);
                     func_800EFD08();
                 }
@@ -500,15 +502,25 @@ ApiStatus UseEntryHeading(ScriptInstance *script, s32 isInitialCall) {
     return ApiStatus_DONE2;
 }
 
-INCLUDE_ASM(s32, "code_F5750", func_802D2148);
+ApiStatus func_802D2148(void) {
+    gPlayerStatus.flags &= ~0x4000000;
+    return ApiStatus_DONE2;
+}
 
 INCLUDE_ASM(s32, "code_F5750", UseExitHeading, ScriptInstance* script, s32 isInitialCall);
 
 INCLUDE_ASM(s32, "code_F5750", func_802D23F8);
 
-INCLUDE_ASM(s32, "code_F5750", func_802D244C);
+ApiStatus func_802D244C(void) {
+    if ((gCollisionStatus.currentFloor >= 0) && (func_802D23F8() != 0)) {
+        return ApiStatus_DONE2;
+    }
+    return ApiStatus_BLOCK;
+}
 
-INCLUDE_ASM(s32, "code_F5750", func_802D2484);
+s32 func_802D2484(void) {
+    return (~gCollisionStatus.currentFloor < 0) * ApiStatus_DONE2;
+}
 
 ApiStatus func_802D249C(ScriptInstance* script, s32 isInitialCall) {
     Bytecode* args = script->ptrReadPos;
@@ -525,13 +537,65 @@ ApiStatus func_802D24F4(ScriptInstance* script, s32 isInitialCall) {
     return (gPlayerStatus.moveFrames == 0) * ApiStatus_DONE2;
 }
 
-INCLUDE_ASM(s32, "code_F5750", func_802D2508);
+ApiStatus func_802D2508(void) {
+    return (!(gPlayerStatus.flags & 0x2000)) * 2;
+}
+
+extern u16 D_802DB5B0;
 
 INCLUDE_ASM(s32, "code_F5750", func_802D2520);
 
-INCLUDE_ASM(s32, "code_F5750", func_802D286C);
+ApiStatus func_802D286C(ScriptInstance *script) {
+    s32 temp = *script->ptrReadPos;
+    D_802DB5B0 = temp;
+    return ApiStatus_DONE2;
+}
 
-INCLUDE_ASM(s32, "code_F5750", func_802D2884);
+s32 func_802D2884(ScriptInstance *script, s32 isInitialCall) {
+    PlayerStatus* playerStatus = &gPlayerStatus;
+    Bytecode *args = script->ptrReadPos;
+    f32* temp_s5 = &script->functionTemp[1].f;
+    f32* temp_s1 = &script->functionTemp[2].f;
+    s32* temp_s4 = &script->functionTemp[3].s;
+    f32 phi_f2;
+    Npc** playerNpc;
+
+
+    if (isInitialCall) {
+        f32 temp_f20 = get_float_variable(script, *args++);
+        f32 temp_f0 = get_float_variable(script, *args++);
+
+        script->functionTemp[1].f = gPlayerNpcPtr->yaw = playerStatus->targetYaw;
+        if ((playerStatus->position.x != temp_f20) || (playerStatus->position.z != temp_f0)) {
+            phi_f2 = atan2(playerStatus->position.x, playerStatus->position.z, temp_f20, temp_f0);
+        } else {
+            phi_f2 = playerStatus->targetYaw;
+        }
+        *temp_s1 = phi_f2 - *temp_s5;
+        *temp_s4 = get_variable(script, *args++);
+        gPlayerNpcPtr->duration = 0;
+
+        if (*temp_s1 < -180.0f) {
+            *temp_s1 = (f32) (*temp_s1 + 360.0f);
+        }
+
+        if (*temp_s1 > 180.0f) {
+            *temp_s1 = (f32) (*temp_s1 - 360.0f);
+        }
+    }
+
+    if (*temp_s4 > 0) {
+        playerNpc = &gPlayerNpcPtr;
+        (*playerNpc)->duration++;
+        (*playerNpc)->yaw = *temp_s5 + ((*temp_s1 * (*playerNpc)->duration) / *temp_s4);
+        playerStatus->targetYaw = (*playerNpc)->yaw = clamp_angle((*playerNpc)->yaw);
+        return ((*playerNpc)->duration < *temp_s4) ^ 1;
+    }
+    playerNpc = &gPlayerNpcPtr;
+    (*playerNpc)->yaw += *temp_s1;
+    playerStatus->targetYaw = (*playerNpc)->yaw = clamp_angle((*playerNpc)->yaw);
+    return ApiStatus_DONE2;
+}
 
 ApiStatus DisablePulseStone(ScriptInstance* script, s32 isInitialCall) {
     PlayerStatus* playerStatus = &gPlayerStatus;
@@ -560,9 +624,19 @@ ApiStatus GetCurrentPartner(ScriptInstance* script, s32 isInitialCall) {
     return ApiStatus_DONE2;
 }
 
-INCLUDE_ASM(s32, "code_F5750", func_802D2B50);
+ApiStatus func_802D2B50(void) {
+    PlayerStatus* playerStatus = &gPlayerStatus;
 
-INCLUDE_ASM(s32, "code_F5750", func_802D2B6C);
+    playerStatus->animFlags |= 8;
+    return ApiStatus_DONE2;
+}
+
+ApiStatus func_802D2B6C(void) {
+    PlayerStatus* playerStatus = &gPlayerStatus;
+
+    playerStatus->animFlags |= 4;
+    return ApiStatus_DONE2;
+}
 
 ApiStatus Disable8bitMario(ScriptInstance* script, s32 isInitialCall) {
     Bytecode* args = script->ptrReadPos;
@@ -582,9 +656,26 @@ ApiStatus Disable8bitMario(ScriptInstance* script, s32 isInitialCall) {
     return ApiStatus_DONE2;
 }
 
-INCLUDE_ASM(s32, "code_F5750", func_802D2C14);
+ApiStatus func_802D2C14(ScriptInstance *script) {
+    func_800EF3D4(get_variable(script, *script->ptrReadPos));
+    return ApiStatus_DONE2;
+}
 
-INCLUDE_ASM(s32, "code_F5750", func_802D2C40);
+ApiStatus func_802D2C40(ScriptInstance *script) {
+    Bytecode* curPos = script->ptrReadPos;
+    f32 x = get_variable(script, *curPos++);
+    PlayerStatus* playerStatus = &gPlayerStatus;
+    f32 y;
+    f32 z;
+
+    playerStatus->extraVelocity.x = x;
+    y = get_variable(script, *curPos++);
+    playerStatus->extraVelocity.y = y;
+    z = get_variable(script, *curPos++);
+    playerStatus->extraVelocity.z = z;
+
+    return ApiStatus_DONE2;
+}
 
 ApiStatus PlaySoundAtPlayer(ScriptInstance* script, s32 isInitialCall) {
     Bytecode* args = script->ptrReadPos;
@@ -592,13 +683,18 @@ ApiStatus PlaySoundAtPlayer(ScriptInstance* script, s32 isInitialCall) {
     s32 var2 = get_variable(script, *args++);
 
     play_sound_at_player(var, var2);
-    return 2;
+    return ApiStatus_DONE2;
 }
 
-INCLUDE_ASM(s32, "code_F5750", func_802D2D30);
+INCLUDE_ASM(void, "code_F5750", func_802D2D30, u8 r, u8 g, u8 b, u8 a, u16 arg4, u16 arg5, u16 arg6, u16 arg7);
 
-INCLUDE_ASM(s32, "code_F5750", func_802D2ED4);
+void func_802D2ED4(s32 arg0, s32 arg1, s32 arg2, s32 arg3, u16 arg4, u16 arg5, u16 arg6, u16 arg7) {
+    u16 a6 = (arg4 + arg6);
+    u16 a7 = (arg5 + arg7);
+    func_802D2D30(arg0, arg1, arg2, arg3, arg4, arg5, a6, a7);
+}
 
+// potential file split? Funcs after here seem really different.
 INCLUDE_ASM(s32, "code_F5750", func_802D2F34);
 
 INCLUDE_ASM(s32, "code_F5750", func_802D2FCC);

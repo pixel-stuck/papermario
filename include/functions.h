@@ -71,7 +71,7 @@ UNK_TYPE func_80072230(s32, f32, f32, f32, f32, s32);
 
 // Text
 PrintContext* load_string(s32 stringID, s32* a1);
-void get_screen_coords(s32 cameraID, f32 x, f32 y, f32 z, s32* outX, s32* outY, s32* outZ);
+void get_screen_coords(Cam camID, f32 x, f32 y, f32 z, s32* outX, s32* outY, s32* outZ);
 
 void parent_collider_to_model(s32 colliderID, s16 modelIndex);
 void clone_model(u16 srcModelID, u16 newModelID);
@@ -111,7 +111,8 @@ f32 sin_deg(f32 x);
 f32 cos_deg(f32 x);
 f32 sin_rad(f32 x);
 f32 cos_rad(f32 x);
-void sin_cos_deg(f32 x, f32* sin, f32* cos);
+void sin_cos_rad(f32 rad, f32* outSinTheta, f32* outCosTheta);
+void sin_cos_deg(f32 deg, f32* outSinTheta, f32* outCosTheta);
 s16 round(f32);
 f32 atan2(f32 startX, f32 startZ, f32 endX, f32 endZ);
 f32 clamp_angle(f32 theta);
