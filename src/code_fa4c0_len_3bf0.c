@@ -1,8 +1,36 @@
 #include "common.h"
 
+typedef struct struct802D6420 {
+    /* 0x00 */ char unk_00[0x330];
+} struct802D6420; // size = 0x330
+
+typedef struct struct802D5B10 {
+    /* 0x00 */ char unk_00[0x14];
+} struct802D5B10; // size = 0x14
+
+extern s32 D_802DB7D0; // seems to be a pointer to some kind of struct, size 0x14
+extern s32 D_802DB7D8[10];
+extern s32 D_802DB800[10];
+extern struct802D6420 D_802DB830;
+extern Bytecode D_802D9D34[];
+
 INCLUDE_ASM(s32, "code_fa4c0_len_3bf0", func_802D5B10);
 
-INCLUDE_ASM(s32, "code_fa4c0_len_3bf0", func_802D5C70);
+ApiStatus func_802D5C70(ScriptInstance *script, s32 isInitialCall) {
+    s32 *phi_v1;
+    s32 *phi_a0;
+    s32 i;
+
+    D_802DB7D0 = get_variable(script, *script->ptrReadPos);
+    phi_v1 = D_802DB7D8;
+    phi_a0 = D_802DB800;
+    for(i = 0; i < 10; i++) {
+        phi_v1[i] = 0;
+        phi_a0[i] = 0;
+    }
+    start_script(D_802D9D34, 1, 0);
+    return ApiStatus_DONE2;
+}
 
 ApiStatus FadeOutMusic(ScriptInstance* script, s32 isInitialCall) {
     Bytecode* args = script->ptrReadPos;

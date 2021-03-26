@@ -29,8 +29,7 @@ void sort_scripts(void) {
         }
     }
 
-    gScriptListCount = numValidScripts;
-    j = numValidScripts;
+    j = gScriptListCount = numValidScripts;
     for (i = 0; i < (j - 1); i++) {
         currentScriptListPtr = &gCurrentScriptListPtr;
         scriptIdList = gScriptIdList;
@@ -157,7 +156,6 @@ void func_802C3390(ScriptInstance* script) {
     suspend_all_group(arg);
 }
 
-#ifdef NON_MATCHING
 ScriptInstance* start_script(Bytecode* initialLine, s32 priority, s32 initialState) {
     ScriptInstance* newScript;
     s32 curScriptIndex;
@@ -198,11 +196,11 @@ ScriptInstance* start_script(Bytecode* initialLine, s32 priority, s32 initialSta
 
     scriptListCount = 0;
 
-    for (i = 0; i < 16; i++) {
+    for (i = 0; i < ARRAY_COUNT(newScript->varTable); i++) {
         newScript->varTable[i] = 0;
     }
 
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < ARRAY_COUNT(newScript->varFlags); i++) {
         newScript->varFlags[i] = 0;
     }
 
@@ -213,6 +211,7 @@ ScriptInstance* start_script(Bytecode* initialLine, s32 priority, s32 initialSta
         gScriptIndexList[scriptListCount] = curScriptIndex;
         gScriptIdList[scriptListCount] = newScript->id;
     }
+    
     func_802C3390(newScript);
     {
         s32* tempCounter = &gStaticScriptCounter;
@@ -222,10 +221,6 @@ ScriptInstance* start_script(Bytecode* initialLine, s32 priority, s32 initialSta
     }
     return newScript;
 }
-#else
-INCLUDE_ASM(ScriptInstance*, "code_e79b0_len_1920", start_script, Bytecode* initialLine, s32 priority,
-            s32 initialState);
-#endif
 
 ScriptInstance* start_script_in_group(Bytecode* initialLine, u8 priority, u8 initialState, u8 groupFlags) {
     ScriptInstance* newScript;
@@ -244,9 +239,7 @@ ScriptInstance* start_script_in_group(Bytecode* initialLine, u8 priority, u8 ini
     ASSERT(i < MAX_SCRIPTS);
     curScriptIndex = i;
 
-    (*gCurrentScriptListPtr)[curScriptIndex] = newScript = heap_malloc(sizeof(ScriptInstance));
-    numScripts = &gNumScripts;
-    (*numScripts)++;
+    SCRIPT_ALLOC(newScript, curScriptIndex);
     ASSERT(newScript != NULL);
 
     // Some of this function is surely macros. I think we'll learn more as we do others in this file. -Ethan
@@ -273,10 +266,10 @@ ScriptInstance* start_script_in_group(Bytecode* initialLine, u8 priority, u8 ini
         newScript->timeScale = gGlobalTimeSpace;
         scriptListCount = 0;
 
-        for (i = 0; i < ((s32)((sizeof(newScript->varTable)) / (sizeof(newScript->varTable[0])))); i++) {
+        for (i = 0; i < ARRAY_COUNT(newScript->varTable); i++) {
             newScript->varTable[i] = 0;
         }
-        for (i = 0; i < ((s32)((sizeof(newScript->varFlags)) / (sizeof(newScript->varFlags[0])))); i++) {
+        for (i = 0; i < ARRAY_COUNT(newScript->varFlags); i++) {
             newScript->varFlags[i] = 0;
         }
 
@@ -299,10 +292,75 @@ ScriptInstance* start_script_in_group(Bytecode* initialLine, u8 priority, u8 ini
     return newScript;
 }
 
-INCLUDE_ASM(s32, "code_e79b0_len_1920", start_child_script);
+s32 start_child_script(ScriptInstance* parentScript, Bytecode* arg1, s32 arg2) {
+    s32 i;
+    s32 curScriptIndex;
+    s32 scriptListCount;
+    s32* temp6;
+    ScriptInstance* child;
 
-#ifdef NON_MATCHING
-// appears to be functionally equivalent, some ordering and regalloc issues
+    for (i = 0; i < MAX_SCRIPTS; i++) {
+        if ((*gCurrentScriptListPtr)[i] == NULL) {
+            break;
+        }
+    }
+
+    ASSERT(i < MAX_SCRIPTS);
+
+    curScriptIndex = i;
+    SCRIPT_ALLOC(child, curScriptIndex);
+    ASSERT(child != NULL);
+
+    parentScript->childScript = child;
+    parentScript->state |= 0x10;
+    child->state = arg2 | 1;
+    child->ptrCurrentLine = child->ptrFirstLine = child->ptrNextLine = arg1;
+    
+    
+    child->currentOpcode = 0;
+    child->userData = NULL;
+    child->blockingParent = parentScript;
+    child->childScript = NULL;
+    child->parentScript = NULL;
+    child->priority = parentScript->priority + 1;
+    child->id = gStaticScriptCounter++;
+    child->owner1 = parentScript->owner1;
+    child->owner2 = parentScript->owner2;
+    child->loopDepth = -1;
+    child->switchDepth = -1;
+    child->groupFlags = parentScript->groupFlags;
+    child->ptrSavedPosition = NULL;
+    child->array = parentScript->array;
+    child->flagArray = parentScript->flagArray;
+    child->timeScale = gGlobalTimeSpace;
+    child->frameCounter = 0.0f;
+    child->unk_158 = 0;
+
+    scriptListCount = 0;
+
+    for (i = 0; i < ARRAY_COUNT(child->varTable); i++) {
+        child->varTable[i] = parentScript->varTable[i];
+    }
+
+    for (i = 0; i < ARRAY_COUNT(child->varFlags); i++) {
+        child->varFlags[i] = parentScript->varFlags[i];
+    }
+
+    find_script_labels(child);
+    if (D_802D9CA4 != 0) {
+        scriptListCount = gScriptListCount++;
+        gScriptIndexList[scriptListCount] = curScriptIndex;
+        gScriptIdList[scriptListCount] = child->id;
+    }
+
+    func_802C3390(child);
+    temp6 = &gStaticScriptCounter;
+    if (*temp6 == 0) {
+        *temp6 = 1;
+    }
+    return child;
+}
+
 ScriptInstance* func_802C39F8(ScriptInstance* parentScript, Bytecode* nextLine, s32 newState) {
     ScriptInstance* child;
     s32* temp6;
@@ -367,10 +425,6 @@ ScriptInstance* func_802C39F8(ScriptInstance* parentScript, Bytecode* nextLine, 
     func_802C3390(child);
     return child;
 }
-#else
-INCLUDE_ASM(ScriptInstance*, "code_e79b0_len_1920", func_802C39F8, ScriptInstance* parentScript, Bytecode* nextLine,
-            s32 newState);
-#endif
 
 ScriptInstance* func_802C3C10(ScriptInstance* script, Bytecode* line, s32 arg2) {
     ScriptInstance* curScript;
@@ -436,7 +490,49 @@ ScriptInstance* restart_script(ScriptInstance* script) {
     return script;
 }
 
-INCLUDE_ASM(s32, "code_e79b0_len_1920", update_scripts);
+void update_scripts(void) {
+    s32* indexList = gScriptIndexList;
+    s32* IdList = gScriptIdList;
+    s32 temp_v0_4;
+    s32 phi_s1;
+    s32 i;
+
+    if (GAME_STATUS->disableScripts == TRUE) {
+        return;
+    }
+
+    D_802D9CA4 = 1;
+    sort_scripts();
+
+    for(i = 0; i < gScriptListCount; i++) {
+        ScriptInstance* curScript = (*gCurrentScriptListPtr)[indexList[i]];
+
+        if ((curScript != NULL) && (curScript->id == IdList[i]) && (curScript->state != 0) && ((curScript->state & 0x92) == 0)) {
+            curScript->frameCounter += curScript->timeScale;
+            phi_s1 = FALSE;
+
+            do {
+                if (curScript->frameCounter < 1.0) {
+                    break;
+                }
+
+                curScript->frameCounter -= 1.0;
+                temp_v0_4 = si_execute_next_command(curScript);
+
+                if (temp_v0_4 == 1) {
+                    phi_s1 = TRUE;
+                    break;
+                }
+            } while(temp_v0_4 != -1);
+
+            if (phi_s1) {
+                break;
+            }
+        }
+    }
+
+    D_802D9CA4 = 0;
+}
 
 // this function is evil.
 INCLUDE_ASM(s32, "code_e79b0_len_1920", func_802C3EE4);

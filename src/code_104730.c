@@ -2,36 +2,35 @@
 
 void func_802E2EB0(Entity* entity);
 
+// Textures
 extern UNK_TYPE D_802E9170;
 extern UNK_TYPE D_802E91F0;
+
+// Verticies
 extern UNK_TYPE D_802E9270;
 extern UNK_TYPE D_802E92B0;
 
-extern UNK_TYPE D_0A003508;
+// unkown ROM addresses
 extern UNK_TYPE D_00E4B2E0;
 extern UNK_TYPE D_00E4E7F0;
-extern UNK_TYPE D_0A000EF8;
-extern UNK_TYPE D_0A000EF8;
-extern UNK_TYPE D_0A000EE8;
-extern UNK_TYPE D_0A000740;
-
-extern UNK_TYPE D_00E62AC0;
-extern UNK_TYPE D_00E639C0;
-extern UNK_TYPE D_00E639C0;
-extern UNK_TYPE D_00E648D0;
-extern UNK_TYPE D_00E639C0;
-extern UNK_TYPE D_00E648D0;
 extern UNK_TYPE D_00E62370;
 extern UNK_TYPE D_00E62AC0;
+extern UNK_TYPE D_00E639C0;
+extern UNK_TYPE D_00E648D0;
 
-extern UNK_TYPE D_0A0031E0;
-extern UNK_TYPE D_0A001508;
-extern UNK_TYPE D_0A0031B0;
-extern UNK_TYPE D_0A0014D8;
-extern UNK_TYPE D_0A002F78;
+// unknown segment addresses
+extern UNK_TYPE D_0A000740;
+extern UNK_TYPE D_0A000EE8;
+extern UNK_TYPE D_0A000EF8;
 extern UNK_TYPE D_0A001218;
-extern UNK_TYPE D_0A003F70;
+extern UNK_TYPE D_0A0014D8;
+extern UNK_TYPE D_0A001508;
 extern UNK_TYPE D_0A002318;
+extern UNK_TYPE D_0A002F78;
+extern UNK_TYPE D_0A0031B0;
+extern UNK_TYPE D_0A0031E0;
+extern UNK_TYPE D_0A003508;
+extern UNK_TYPE D_0A003F70;
 
 Gfx D_802E96F0[] = {
     gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON),
@@ -106,28 +105,28 @@ s32 D_802E9898[9] = {
     0x00000000,
 };
 
-// ????
+// StaticShadowData
 s32 D_802E98BC[9] = {
     0x00200000, (s32) &D_802E9850, 0x00000000, (s32)create_shadow_callback,
     0x00000000, 0x00000000, 0x00000000, 0x00000000,
     0x01190A19
 };
 
-// ????
+// StaticShadowData
 s32 D_802E98DC[9] = {
     0x00200000, (s32) &D_802E9874, 0x00000000, (s32)create_shadow_callback, 
     0x00000000, 0x00000000, 0x00000000, 0x00000000, 
     0x01190A19
 };
 
-// ????
+// StaticShadowData
 s32 D_802E9900[9] = {
     0x00200000, (s32) &D_802E9898, 0x00000000, (s32)create_shadow_callback, 
     0x00000000, 0x00000000, 0x00000000, 0x00000000, 
     0x01190A19
 };
 
-// ????
+// File split?
 s32 D_802E9924[2] = {
     0x00000000, 0x00000000
 };
@@ -150,7 +149,6 @@ s32 D_802E9930[51] = {
 
 // Model stuff
 s32 D_802E99FC[7] = {
-
     0x00000004, 0x00000022, 0x00000001, 0x0000003C,
     &D_0A003508, 0x00000002, 0x00000000,
 };

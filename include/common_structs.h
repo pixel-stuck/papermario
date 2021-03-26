@@ -345,12 +345,14 @@ typedef struct VirtualModel {
     /* 0x04 */ s8 unk_04;
     /* 0x05 */ char unk_05[3];
     /* 0x08 */ f32 unk_08;
-    /* 0x0C */ char unk_0C[4];
+    /* 0x0C */ f32 unk_0C;
     /* 0x10 */ s32* virtualModelData;
     /* 0x14 */ s32* unk_14;
     /* 0x18 */ char unk_18[0x40];
     /* 0x58 */ s32* loopPoint;
-    /* 0x5C */ char unk_5C[0xC];
+    /* 0x5C */ s32 unk_5C;
+    /* 0x60 */ s32 unk_60;
+    /* 0x64 */ char unk_64[4];
 } VirtualModel; // size = 0x68
 
 typedef struct MusicPlayer {

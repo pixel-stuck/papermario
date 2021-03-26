@@ -515,7 +515,7 @@ def dump_elf() -> Tuple[str, ObjdumpCommand, ObjdumpCommand]:
         f"--disassemble={args.diff_elf_symbol}",
     ]
 
-    objdump_flags = ["-drz", "-j", ".text"]
+    objdump_flags = ["-Drz", "-j", ".text"]
     return (
         myimg,
         (objdump_flags + flags1, baseimg, None),
@@ -545,7 +545,7 @@ def dump_objfile() -> Tuple[str, ObjdumpCommand, ObjdumpCommand]:
     if not os.path.isfile(refobjfile):
         fail(f'Please ensure an OK .o file exists at "{refobjfile}".')
 
-    objdump_flags = ["-drz"]
+    objdump_flags = ["-Drz"]
     return (
         objfile,
         (objdump_flags, refobjfile, args.start),

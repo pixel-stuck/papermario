@@ -1,6 +1,7 @@
 #include "common.h"
 
-extern s32** D_80154370; // probably entities of some sort
+extern s32 D_80151318; // VirtualModelCount
+extern VirtualModel** D_80154370; // VirtualModelList
 extern s32 D_80154378; // entity fog enabled
 extern s32 D_8015437C; // entity fog red
 extern s32 D_80154380; // entity fog green
@@ -8,18 +9,64 @@ extern s32 D_80154384; // entity fog blue
 extern s32 D_80154388; // entity fog alpha
 extern s32 D_8015438C; // entity fog dist min
 extern s32 D_80154390; // entity fog dist max
+extern s32 D_8014C260[];
 
 INCLUDE_ASM(s32, "code_b72b0_len_15ed0", clear_virtual_models);
 
 INCLUDE_ASM(s32, "code_b72b0_len_15ed0", init_virtual_models);
 
-INCLUDE_ASM(s32, "code_b72b0_len_15ed0", load_virtual_model);
+s32 load_virtual_model(s32* arg0) {
+    VirtualModel* model;
+    VirtualModel** phi_v1;
+    s32* numModels;
+    s32 i;
+    GameStatus* gameStatus;
+    s32* temp;
+
+    for(i = 0; i < 0x100; i++)
+    {
+        if (D_80154370[i] == 0) {
+            break;
+        }
+    }
+    ASSERT(i < 0x100);
+
+    D_80154370[i] = model = heap_malloc(sizeof(VirtualModel));
+    numModels = &D_80151318;
+    (*numModels)++;
+    ASSERT(model != NULL);
+
+    model->flags = 0x17;
+    model->unk_04 = 1;
+    model->unk_14 = NULL;
+    model->virtualModelData = arg0;
+    model->unk_08 = 1.0f;
+    model->unk_0C = 1.0f;
+
+    if (arg0 == NULL) {
+        model->virtualModelData = D_8014C260;
+    }
+
+    temp = model->virtualModelData;
+    gameStatus = GAME_STATUS;
+    model->unk_5C = 0;
+    model->unk_60 = 0;
+    model->loopPoint = temp;
+
+
+    if ((*gameStatus).isBattle) {
+        i |= 0x800;
+    }
+
+    return i;
+}
 
 INCLUDE_ASM(s32, "code_b72b0_len_15ed0", func_80120DE4);
 
 INCLUDE_ASM(s32, "code_b72b0_len_15ed0", func_80120F04);
 
 #ifdef NON_MATCHING
+// needs rodata
 s32 func_80120FB8(VirtualModel* virtualModel) {
     u32 temp;
     s32* temp2;
@@ -92,47 +139,46 @@ INCLUDE_ASM(s32, "code_b72b0_len_15ed0", func_80122288);
 
 INCLUDE_ASM(s32, "code_b72b0_len_15ed0", func_80122D7C);
 
-s32 func_80122DDC(s32 arg0) {
+VirtualModel* func_80122DDC(s32 arg0) {
     return D_80154370[arg0 & ~0x800];
 }
 
-INCLUDE_ASM(s32, "code_b72b0_len_15ed0", func_80122DFC);
+// frees model by index
+void func_80122DFC(s32 virtualModelIndex) {
+    s32 maskedIndex = virtualModelIndex & ~0x800;
+    VirtualModel* temp_v1;
+    VirtualModel*** modelList = &D_80154370;
+    s32* modelCount;
 
-INCLUDE_ASM(void, "code_b72b0_len_15ed0", func_80122E94, VirtualModel* virtualModel);
-/*s32 func_80122E94(s32 arg0) {
-    s32 temp_a0;
-    s32 temp_v0;
-    s32 temp_v0_2;
-    void *phi_v1;
-    s32 phi_a0;
-    s32 phi_v0;
-    s32 phi_a0_2;
-    s32 phi_return;
-
-    phi_v1 = D_80154370;
-    phi_a0 = 0;
-loop_1:
-    temp_v0 = phi_a0 < 0x100;
-    phi_v0 = temp_v0;
-    phi_a0_2 = phi_a0;
-    phi_return = temp_v0;
-    if (*phi_v1 != arg0) {
-        temp_a0 = phi_a0 + 1;
-        phi_v1 = phi_v1 + 4;
-        phi_a0 = temp_a0;
-        if (temp_a0 < 0x100) {
-            goto loop_1;
+    temp_v1 = (*modelList)[maskedIndex];
+    if (temp_v1 != NULL) {
+        if (temp_v1->flags) {
+            if ((temp_v1->flags & 0x400)) {
+                heap_free(temp_v1->unk_14);
+            }
+            heap_free((*modelList)[maskedIndex]);
+            (*modelList)[maskedIndex] = NULL;
+            modelCount = &D_80151318;
+            (*modelCount)--;
         }
-        temp_v0_2 = temp_a0 < 0x100;
-        phi_v0 = temp_v0_2;
-        phi_a0_2 = temp_a0;
-        phi_return = temp_v0_2;
     }
-    if (phi_v0 != 0) {
-        phi_return = func_80122DFC(phi_a0_2, arg0);
+}
+
+// frees model by pointer
+void func_80122E94(VirtualModel* arg0) {
+    VirtualModel** phi_v1 = D_80154370;
+    s32 i;
+
+    for(i = 0; i < 0x100; i++) {
+        if (phi_v1[i] == arg0) {
+            break;
+        }
     }
-    return phi_return;
-}*/
+
+    if (i < 0x100) {
+        func_80122DFC(i);
+    }
+}
 
 INCLUDE_ASM(s32, "code_b72b0_len_15ed0", func_80122EE8);
 
