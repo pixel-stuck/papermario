@@ -19,7 +19,12 @@ u16 D_800741F2 = 0;
 s32 gCurrentDisplayContextIndex = 0;
 s32 D_800741F8 = 0;
 s32 D_800741FC = 0;
-s32 D_80074200[] = { 0x028001E0, 0x01FF0000, 0x028001E0, 0x01FF0000 };
+Vp D_80074200 = {
+                  .vp = {
+                          .vscale = { 0x0280, 0x01E0, 0x01FF, 0x0000 }, 
+                          .vtrans = { 0x0280, 0x01E0, 0x01FF, 0x0000 }
+                        }
+                };
 
 Gfx D_80074210[] = {
     gsDPSetRenderMode(G_RM_OPA_SURF, G_RM_OPA_SURF2),
@@ -162,15 +167,98 @@ void gfx_task_background(void) {
     gDPFullSync((*gfx)++);
     gSPEndDisplayList((*gfx)++);
 
-    // TODO these << 3 >> 3 shouldn't be necessary. There's almost definitely something we're missing here...
-    ASSERT((s32)((u32)((*gfx) - (*gDisplayContextPtr)->backgroundGfx) << 3 >> 3) < ARRAY_COUNT((
+    ASSERT((s32)((u32)((*gfx) - ((*gDisplayContextPtr)->backgroundGfx) & 0x1FFFFFFF)) < ARRAY_COUNT((
                 *gDisplayContextPtr)->backgroundGfx));
 
     nuGfxTaskStart(&gDisplayContext->backgroundGfx[0], (gMasterGfxPos - gDisplayContext->backgroundGfx) << 3,
                    NU_GFX_UCODE_F3DEX2, NU_SC_NOSWAPBUFFER);
 }
 
-INCLUDE_ASM(s32, "code_1b40_len_20b0", gfx_draw_frame);
+void _render_transition_stencil(s32, f32, s32);
+
+#ifdef NON_MATCHING
+void gfx_draw_frame(void) {
+    Gfx** gfx = &gMasterGfxPos;
+    Gfx** gfx2;
+
+    gMatrixListPos = 0;
+    *gfx = &gDisplayContext->mainGfx[0];
+
+    if (OVERRIDE_FLAG_CHECK(8) != 0) {
+        s32* dispContextIndex = &gCurrentDisplayContextIndex;
+        *dispContextIndex ^= 1;
+        return;
+    }
+
+    gSPMatrix((*gfx)++, &D_800741A8, G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+    func_802DDA60();
+
+    if (OVERRIDE_FLAG_CHECK(2) == 0) {
+        render_frame(0);
+    }
+
+    func_800E0260();
+    func_802C3EE4();
+    render_transition_stencil_lower();
+    func_80123550();
+    func_80142210();
+    func_80059F94();
+    render_ui();
+
+    if (OVERRIDE_FLAG_CHECK(0x10000) == 0) {
+        render_window_root();
+    }
+
+    if ((OVERRIDE_FLAG_CHECK(2) == 0) && (!gGameStatusPtr->disableScripts)) {
+        render_frame(1);
+    }
+
+    if (OVERRIDE_FLAG_CHECK(0x100010) == 0) {
+        render_messages();
+    }
+    func_801234E0();
+    func_8014271C();
+    render_transition_stencil_upper();
+
+    if (OVERRIDE_FLAG_CHECK(0x100010) == 0x10) {
+        render_messages();
+    }
+
+    render_curtains();
+
+    if (OVERRIDE_FLAG_CHECK(0x100000) != 0) {
+        render_messages();
+    }
+
+    if (OVERRIDE_FLAG_CHECK(0x10000) != 0) {
+        render_window_root();
+    }
+
+    func_80112FC4();
+
+    if (OVERRIDE_FLAG_CHECK(0x20) != 0) {
+        if (D_800741A2 < 2) {
+            if (D_800741A2 >= 0) {
+                _render_transition_stencil(7, D_800741A0, 0);
+            }
+        }
+    }
+
+    ASSERT(((gMasterGfxPos - gDisplayContext->mainGfx) & 0x1FFFFFFF) < ARRAY_COUNT(gDisplayContext->mainGfx));
+
+    gfx2 = &gMasterGfxPos;
+    gDPFullSync((*gfx2)++);
+    gSPEndDisplayList((*gfx2)++);
+    nuGfxTaskStart(&gDisplayContext->mainGfx[0], ((*gfx2) - &gDisplayContext->mainGfx[0]) << 3, NU_GFX_UCODE_F3DEX2, NU_SC_TASK_LOADABLE | NU_SC_SWAPBUFFER);
+    {
+        s32* dispContextIndex = &gCurrentDisplayContextIndex;
+        *dispContextIndex ^= 1;
+    }
+    func_8002C890(D_8009A64C, 0x140, 0xF0);
+}
+#else
+INCLUDE_ASM(void, "code_1b40_len_20b0", gfx_draw_frame, void);
+#endif
 
 void load_engine_data(void) {
     GameStatus** gameStatus = &gGameStatusPtr;
@@ -278,11 +366,8 @@ s32 func_80027190(void) {
 
 #ifdef NON_MATCHING
 void gfx_init_state(void) {
-    Gfx* temp;
-
     gSPSegment(gMasterGfxPos++, 0x00, 0x0);
     gSPDisplayList(gMasterGfxPos++, OS_K0_TO_PHYSICAL(&D_80074230));
-    temp = gMasterGfxPos++;
     gSPDisplayList(gMasterGfxPos++, OS_K0_TO_PHYSICAL(&D_80074210));
 }
 #else
