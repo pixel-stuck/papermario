@@ -8,6 +8,7 @@ INCLUDE_ASM(s32, "42B0", func_80028F4C);
 
 INCLUDE_ASM(s32, "42B0", func_80028FA0);
 
+// file split here! (from US)
 INCLUDE_ASM(s32, "42B0", func_80028FB0);
 
 INCLUDE_ASM(s32, "42B0", func_80028FF0);

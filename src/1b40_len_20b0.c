@@ -276,6 +276,7 @@ s32 func_80027190(void) {
     return D_8009A5D8;
 }
 
+// FILE SPLIT HERE (detected via jp)
 #ifdef NON_MATCHING
 void gfx_init_state(void) {
     Gfx* temp;
